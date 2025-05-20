@@ -1,0 +1,486 @@
+{
+  "name": "HN Top Product",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=```html\n{{ $json.results[0].cleaned_html }}\n```",
+        "options": {
+          "systemMessage": "User will provide an extracted HTML version of a crawled website inside \\`\\`\\`html.\n\nThe website is list of about top products post people do on different technology areas.\n\nYou need to find all the posts and return them as response\n\n- MUST consider the points and number of comments.\n- MUST remove \"Show HN\" from the title\n- Comment Link should be full URL with domain and https\n\nOutput guidelines\n- Must be in JSON\n- With each item there should be 'title', 'comments', 'points', 'mainLink' and 'time'. \n- Make sure to use exact key names as defined above\n- Must wrap JSON in \\`\\`\\`json\n\nOutput format (JSON)\n```json\n[{\"title\": \"Product one\", \"comments\": \"link to comments\", \"points\": \"22\", \"time\":\"2025-05-12T05:21:42 1747027302\", \"mainLink\":\"link to the project under titleline\"}]\n```\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        700,
+        -360
+      ],
+      "id": "7127be05-eb7c-4789-af11-e0f52a247399",
+      "name": "Hacker News Analyser"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11235/crawl",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"urls\": [\"https://news.ycombinator.com/show\"],\n  \"priority\": 10\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        500,
+        -360
+      ],
+      "id": "8ab1a10f-a785-48ef-b48b-0f984aad6a66",
+      "name": "Hacker News Show"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * Extract top 3 posts that are 12‑24 h old.\n * @param {string} raw AI model response (includes ```json ... ```)\n * @returns {Array<object>}\n */\nfunction getTopPosts(raw) {\n  // strip newlines\n  const cleaned = raw.replace(/\\n/g, '');\n  \n  // pull out the JSON block\n  const m = cleaned.match(/```json\\s*([\\s\\S]*?)\\s*```/i);\n  if (!m) return [];\n\n  let posts;\n  try {\n    posts = JSON.parse(m[1]);\n  } catch (e) {\n    console.error('Bad JSON:', e);\n    return [];\n  }\n  \n  console.log({raw:posts})\n  const now      = Date.now();\n  const H12_MS   = 12 * 60 * 60 * 1000;\n  const H24_MS   = 24 * 60 * 60 * 1000;\n  console.log({now, H12_MS, H24_MS})\n\n  const windowed = posts.filter(p => {\n    const ts = p.time.split(' ')[1] * 1000\n    if (isNaN(ts)) return false;\n\n    const age = now - ts;\n    return age >= H12_MS && age < H24_MS;\n  });\n\n  return windowed\n    .filter(p => p.points > 100)\n    .sort((a, b) => Number(b.points) - Number(a.points))\n    .slice(0, 3);\n}\n\n/* ---------- usage ---------- */\nconst aiResponse = $input.first().json.output\n\nreturn getTopPosts(aiResponse);\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        -360
+      ],
+      "id": "bef2b01e-0d3a-458b-8dec-7f530bb520a6",
+      "name": "Give Products"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:11235/crawl",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"urls\": [\"{{ $json.comments }}\"],\n  \"priority\": 10\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1080,
+        80
+      ],
+      "id": "4c04cbbd-c6dd-4c12-a6cd-d735eac5d023",
+      "name": "Get Comments"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        780,
+        60
+      ],
+      "id": "f117c3b0-1c40-4e52-b4a1-c842a40244e5",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json.output;\n\nconst match = input.match(/```md\\s*([\\s\\S]*?)\\s*```/);\n\nreturn {md: match ? match[1] : \"\"}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1700,
+        80
+      ],
+      "id": "bb8b62c1-02e2-492c-bd01-812bcb5333e6",
+      "name": "Clean Report"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appsxjR5wn1IDLy4u",
+          "mode": "list",
+          "cachedResultName": "Social Media Posts",
+          "cachedResultUrl": "https://airtable.com/appsxjR5wn1IDLy4u"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblh2J0ICXx2Uoyyv",
+          "mode": "list",
+          "cachedResultName": "Linkedin Posts",
+          "cachedResultUrl": "https://airtable.com/appsxjR5wn1IDLy4u/tblh2J0ICXx2Uoyyv"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Pending",
+            "Full Report": "={{ $json.md }}",
+            "Title": "={{ $('Loop Over Items').item.json.title }}",
+            "Comments Link": "={{ $('Loop Over Items').item.json.comments }}",
+            "Project Link": "={{ $('Loop Over Items').item.json.mainLink }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Pending",
+                  "value": "Pending"
+                },
+                {
+                  "name": "Needs Approval",
+                  "value": "Needs Approval"
+                },
+                {
+                  "name": "Approved",
+                  "value": "Approved"
+                },
+                {
+                  "name": "Posted",
+                  "value": "Posted"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Full Report",
+              "displayName": "Full Report",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Post Content",
+              "displayName": "Post Content",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Comments Link",
+              "displayName": "Comments Link",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Project Link",
+              "displayName": "Project Link",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1940,
+        80
+      ],
+      "id": "04f2ffe7-fcbb-4780-bb14-65f8ff57f782",
+      "name": "Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "VVqSecErCTMnzYoZ",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputSource": "passthrough"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        260,
+        0
+      ],
+      "id": "56f578ba-78b8-4b6c-9066-623e57bd6ffd",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-nano",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        -260
+      ],
+      "id": "8066364b-4984-4d09-beab-ed7e750ec0b2",
+      "name": "Cheap Brain",
+      "credentials": {
+        "openRouterApi": {
+          "id": "bj1izcizFpf7AJv9",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Brain\n- Cost Efficient Brain\n- High Quality\n- Fast Response",
+        "height": 440,
+        "width": 300
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1300,
+        -480
+      ],
+      "typeVersion": 1,
+      "id": "82dfcaab-81ef-450f-9700-5d75c8b98420",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Post Finder\n- Find top trending post in last 24 hours.\n- Shortlist only three",
+        "height": 440,
+        "width": 880,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        380,
+        -480
+      ],
+      "typeVersion": 1,
+      "id": "327a5c32-27d7-49dd-891b-e53725b113fc",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Product Research\n- Reads discussion\n- Understands features, not listed\n- Gets user feedback from comments\n- Creates a detailed report",
+        "height": 380,
+        "width": 1680,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        460,
+        -20
+      ],
+      "typeVersion": 1,
+      "id": "2102f0eb-8b8f-4519-a58a-878498d6c2c2",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=```html\n{{ $json.results[0].cleaned_html }}\n```",
+        "options": {
+          "systemMessage": "You will be provided by an HTML code (inside \\`\\`\\`html) extracted from a website where a product is discussed as comments.\n\nMost of the time, owner of the post will be posting a description about the product first, and then there will be discussion.\n\nYou need to create a report of what product is. and other details of the product.\n\nUsing the extracted data, think step by step.\n1. Lay down what can be sections for the article. Should have Interesting achievements section at 2nd position.\n2. Extract the detailed information for each section one by one.\n3. Extract top 5 interesting fact/achievements about the product, \n\nInstructions\n- MUST not show thinking process\n- MUST give final report inside \\`\\`\\`md\n- Report MUST be in Markdown format\n- MUST not assume anything, only rely on information available"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1300,
+        80
+      ],
+      "id": "ab2faea0-c4ab-4375-acf0-27d6bbde0baa",
+      "name": "Understand Discussion"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e7656f36-9747-4a04-b6f5-889a42170780",
+              "name": "message",
+              "value": "Social Media Posts Created",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        980,
+        -20
+      ],
+      "id": "66a88b88-6349-49fe-9e55-73b0e545405a",
+      "name": "End"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Hacker News Analyser": {
+      "main": [
+        [
+          {
+            "node": "Give Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hacker News Show": {
+      "main": [
+        [
+          {
+            "node": "Hacker News Analyser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Give Products": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "End",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Comments": {
+      "main": [
+        [
+          {
+            "node": "Understand Discussion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Report": {
+      "main": [
+        [
+          {
+            "node": "Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Hacker News Show",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cheap Brain": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Hacker News Analyser",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Understand Discussion",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Understand Discussion": {
+      "main": [
+        [
+          {
+            "node": "Clean Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "d43c904e-5f53-40c7-bd11-b9036769cf21",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "c3507e77e4379f59057306ad7bb9be218363efd8788e56d1d029f4cf772961f8"
+  },
+  "id": "dEj1W8p9Whay8GIT",
+  "tags": []
+}
