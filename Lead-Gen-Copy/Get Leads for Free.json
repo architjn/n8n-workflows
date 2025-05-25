@@ -1,0 +1,456 @@
+{
+  "name": "get leads for free",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -300,
+        -260
+      ],
+      "id": "c1ec5b01-0801-46ab-bbc5-bc592eea1e84",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6471a106-2e18-4ca6-980e-a024c4d42be8",
+              "name": "website",
+              "value": "https://www.yellowpages.com/search?search_terms=Dentists&geo_location_terms=New%20York%2C%20NY",
+              "type": "string"
+            },
+            {
+              "id": "a8c416f2-5410-4493-a1ed-d51282566216",
+              "name": "pages",
+              "value": "3",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -20,
+        -260
+      ],
+      "id": "1f0e8557-0331-4fc7-bc14-b9d53b52fe96",
+      "name": "Website"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.results[0].content }}",
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"array\",\n\t\"items\": {\n\t\t\"type\": \"object\",\n\t\t\"properties\": {\n\t\t\t\"company_name\": {\n\t\t\t\t\"type\": \"string\"\n\t\t\t},\n\t\t\t\"phone_number\": {\n\t\t\t\t\"type\": \"string\",\n\t\t\t\t\"pattern\": \"^\\\\+?[0-9]{7,15}$\"\n\t\t\t},\n           \"website\": {\n\t\t\t\t\"type\": \"string\"\n\t\t\t},\n\t\t\t\"year_in_business\": {\n\t\t\t\t\"type\": \"number\",\n\t\t\t\t\"minimum\": 0,\n\t\t\t\t\"maximum\": 99\n\t\t\t}\n\t\t}\n\t}\n}\n",
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value.\nAlways output the data in a json array called results. \nYour goal is to extract all the companies of the page. To do so, you will give: company name, phone number, website, number of years in business, for each result you can find."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        1640,
+        -400
+      ],
+      "id": "db2d2aea-394d-489b-bc89-ec6d4224e960",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1740,
+        -180
+      ],
+      "id": "67b67200-be4f-48ca-8b39-b12ef076c863",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "*****",
+          "name": "OpenAi"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "output",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        -400
+      ],
+      "id": "ec348438-0935-48bd-8fc9-bf0ee8c1f325",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "196EDvvDyybuOO6wX5PWmT2kcOW8xAdq7Vz2PjhT3nrs",
+          "mode": "list",
+          "cachedResultName": "Leads Dentist demo",
+          "cachedResultUrl": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "leads",
+          "cachedResultUrl": ""
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Dentist": "={{ $json.company_name }}",
+            "phone number": "={{ $json.phone_number }}",
+            "years in business": "={{ $json.year_in_business }}",
+            "website": "={{ $json.website }}",
+            "doNotUse": "={{ $json.website \n    ? `info@${$json.website.replace(/^https?:\\/\\//, '').replace(/^www\\./, '').split('/')[0]}` \n    : `info@${$json.company_name.split(' ')[0].toLowerCase()}.com` }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Dentist",
+              "displayName": "Dentist",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone number",
+              "displayName": "phone number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "years in business",
+              "displayName": "years in business",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "doNotUse",
+              "displayName": "doNotUse",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2340,
+        -140
+      ],
+      "id": "2cc81861-8a73-46c5-89e6-6ff8cc13104d",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "49HDdgBiLhALfiaO",
+          "name": "Google Sheets account 8"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://realtime.oxylabs.io/v1/queries",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"source\": \"universal\",\n  \"url\": \"{{ $json.url }}\"\n}\n\n",
+        "options": {}
+      },
+      "id": "30b43dd3-be9b-43ab-b39a-d52a28e9977b",
+      "name": "ScrapeWebsite",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1400,
+        -400
+      ],
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "*****",
+          "name": "scraper"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "batchSize": "=1",
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        800,
+        -260
+      ],
+      "id": "1ec34435-685a-4626-bdf5-1ddcaaf26b85",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "920c0da2-b882-4504-bdf4-7e697785f028",
+              "name": "counter",
+              "value": 2,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        -260
+      ],
+      "id": "809bfe3c-88d1-4cec-b717-8f08495df2c1",
+      "name": "init"
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "campaignId": "=cam_YA575FbieMfvioKCp",
+        "email": "={{ $json.doNotUse }}",
+        "additionalFields": {
+          "companyName": "={{ $json.Dentist }}",
+          "companyDomain": "={{ $json.website }}",
+          "phone": "={{ $json[\"phone number\"] }}"
+        }
+      },
+      "type": "n8n-nodes-base.lemlist",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        -640
+      ],
+      "id": "ef6907e1-e5a5-4036-8ee2-db9a7b3a831a",
+      "name": "Lemlist",
+      "credentials": {
+        "lemlistApi": {
+          "id": "M1I0E5rU55R5GLGc",
+          "name": "lemlist admin - growth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Fill here website and ",
+        "height": 280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -360
+      ],
+      "id": "8607d08e-764f-4d05-bf3f-0508226b009a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "jsCode": "const websiteData = $(\"Website\").all()[0]?.json;\nconst pages = Array.from({ length: websiteData.pages }, (_, i) => i + 1);\nconst urls = pages.map((page) => ({ json: { url: `${websiteData.website}&page=${page}` } }));\n\nreturn urls;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        -260
+      ],
+      "id": "13b1623f-218c-4c94-9d4a-a70f84af515c",
+      "name": "generate_URL"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website": {
+      "main": [
+        [
+          {
+            "node": "init",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ScrapeWebsite": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Lemlist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "ScrapeWebsite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "init": {
+      "main": [
+        [
+          {
+            "node": "generate_URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "generate_URL": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4ad9f796-26e2-40a1-b5e6-bb7fd8f458b7",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f0a68da631efd4ed052a324b63ff90f7a844426af0398a68338f44245d1dd9e5"
+  },
+  "id": "6WrQJHyt4vjBNj3v",
+  "tags": []
+}
