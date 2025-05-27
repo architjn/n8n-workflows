@@ -1,0 +1,509 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2500,
+        -260
+      ],
+      "id": "3bb2904b-10bd-4422-808e-042fb6ab4966",
+      "name": "When clicking \u2018Test workflow\u2019"
+    },
+    {
+      "parameters": {
+        "content": "## Get Competitor List\n",
+        "height": 240,
+        "width": 280
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2160,
+        -340
+      ],
+      "id": "b53580a5-6971-4532-a02a-0d747e9702fc",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "REDACTED",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "REDACTED",
+          "mode": "list"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2080,
+        -260
+      ],
+      "id": "cf8e66bc-676c-443d-90be-a3afa552d40a",
+      "name": "Google Sheets2",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "content": "## Run Apify Profile Scraper\n",
+        "height": 240,
+        "width": 320,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1680,
+        -340
+      ],
+      "id": "df47dab2-5dcc-4978-a8f5-6556fb915fd8",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.apify.com/v2/acts/apimaestro~linkedin-profile-posts/run-sync-get-dataset-items?token=REDACTED",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"limit\": 1,\n    \"username\": \"{{ $json['LinkedIn URL'] }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1560,
+        -260
+      ],
+      "id": "2a88274e-ae48-4594-be2d-15394fbf9bb4",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "content": "## Store Posts on GSheet",
+        "height": 240,
+        "width": 320,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1200,
+        -340
+      ],
+      "id": "b31682e6-04f7-41f2-989b-33102a9004af",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REDACTED",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "REDACTED",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1100,
+        -260
+      ],
+      "id": "0c668e8a-9552-4f7e-a96a-396162ef94d8",
+      "name": "Google Sheets3",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -1840,
+        -260
+      ],
+      "id": "3a7181d8-8967-452e-880f-0f00e94c3176",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        -1340,
+        -260
+      ],
+      "id": "7d0591a9-6333-40ab-bbf4-74d4d1083ce6",
+      "name": "Limit1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're a LinkedIn ghostwriter for a startup called Amplify which is a DTC clothing brand selling sustainable, ethically made apparel - we offer high-quality, eco-conscious clothing that lasts 5x longer than fast fashion, while being competitively priced for the premium segment. You are actually posting from the founders profile to be founder-led marketing\n\n- Premium Clothing (Basics, Activewear, Business Casual, Seasonal Collections)\n- 40% better quality than comparable brands at the same price point\n\nYour audience is:\n\n- Consumers\n- Founders\n- Business Owners\n\nThis is because you are posting through a personal brand profile talking about amplify, and LinkedIn primarily has a B2B/professional audience, and posts that resonate with emotion about building the business through challenges really resonate, as opposed to selling the product in every post. Pay attention to this detail. Your hooks are really good - but you are always selling Amplify the company & the product, when you should really be talking about you + the challenges you went through. It feels too salesy because you're not being real and authentic, which you should fix. I really like the ones where you talked about you + rejection / etc and hardships. DO NOT KEEP TALKING ABOUT THE FEATURES OF THE PRODUCT/BRAND INSTEAD YOU SHOULD GENERALIZE IT A BIT MORE FROM A FOUNDER/BUSINESS OWNER TYPE DIALOGUE (FOR EXAMPLE - REJECTION FROM A VC COULD BE ABOUT THE FACT THAT HES A FIRST TIME FOUNDER TRYING TO BUILD AN APPAREL BRAND INSTEAD OF SAYING I GOT REJECTED FOR SUSTAINABLE FASHION). THIS IS JUST AN EXAMPLE, YOU DO NOT NEED TO FOLLOW THIS EXACT EXAMPLE EVERY GENERATION, ITS JUST A BOILERPLATE TO TELL YOU HOW TO GENERATE\n\nYour job: Write 5 high-performing LinkedIn posts for Amplify that:\n\n- Feel like they're written by the founder (real, sharp, confident)\n- Use high-performing formats (e.g. bold opinion, checklist, mini-story, insight drop, spicy comparison)\n- Tone: direct, founder-led, anti-BS. Not polished marketing speak.\n\nHere is 1 high-performing LinkedIn/Twitter posts with 500+ likes to learn from, using these, generate a high performing post for our brand Amplfy, along with the hook type and text\nHook Type:\n {{ $json.output.hook_type }}\n\nHook/Post Text:\n{{ $json.output.hook_example_text }}",
+        "hasOutputParser": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        -180,
+        -260
+      ],
+      "id": "073c9adc-15e1-4576-a349-d327c4d277c2",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-3-7-sonnet-20250219",
+          "cachedResultName": "Claude 3.7 Sonnet"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -200,
+        -60
+      ],
+      "id": "d9085e37-3253-42aa-9e74-baff99938e88",
+      "name": "Anthropic Chat Model",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "content": "## Generate Posts from Examples",
+        "height": 420,
+        "width": 320,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        -360
+      ],
+      "id": "638af811-2718-4e0d-9715-cf0acec2d752",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"post_number\": \"1\",\n\t\"post_text\": \"This is the text of the post itself\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -40,
+        -40
+      ],
+      "id": "fd8c14ef-4cb7-4a98-b3e2-5cc97a795c1d",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "content": "## Analyze Posts and Come Up with Post Formats",
+        "height": 420,
+        "width": 320,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -760,
+        -380
+      ],
+      "id": "701fed0a-433f-403c-83ed-ade0082a1d02",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-3-7-sonnet-20250219",
+          "cachedResultName": "Claude 3.7 Sonnet"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -740,
+        -80
+      ],
+      "id": "9378c8dd-db74-480e-8468-450ff3de7ac5",
+      "name": "Anthropic Chat Model1",
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You're a LinkedIn ghostwriter for a startup called Amplify which is a DTC clothing brand selling sustainable, ethically made apparel - we offer high-quality, eco-conscious clothing that lasts 5x longer than fast fashion, while being competitively priced for the premium segment.\n\nYour job: Analyze these 10 posts from competitors and come up with a list of popular post formats, deeply breaking down what the hook is, what the content type is, and what kind of post it is. This will be used later as the format to mimic when we actually write our post\n\n\nHere is 1 high-performing LinkedIn/Twitter posts with 500+ likes to learn from, using these, analyze them and break down their formats/hooks etc.\n\nPost Text:\n {{ $json.text }}\n\nNumber of Reactions (more=better):\n{{ $json.stats.total_reactions }}",
+        "hasOutputParser": true
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.6,
+      "position": [
+        -720,
+        -260
+      ],
+      "id": "983b1cc5-f31d-4c5c-94a4-31ac19a7e181",
+      "name": "Analyze Posts - Anthropic"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"hook_type\": \"Contrasting Past and Present\",\n\t\"hook_example_text\": \"We started Delve out of a cramped MIT dorm room. Here's the story to our office in SF... (In this, show examples of the first 2 hooks of the LinkedIn Posts\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        -80
+      ],
+      "id": "ab10e50f-23a9-47cb-adb1-f0b5ed05660d",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "content": "## Add Generated Post to Google Sheet",
+        "height": 280,
+        "width": 340,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        -300
+      ],
+      "id": "18d48c0d-afed-4b07-9771-9d8614f0bc79",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "REDACTED",
+          "mode": "list"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "REDACTED",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Original Competitor Post": "={{ $('Analyze Posts - Anthropic').item.json.output.hook_example_text }}",
+            "Generated Post": "={{ $json.output.post_text }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Original Competitor Post",
+              "displayName": "Original Competitor Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Generated Post",
+              "displayName": "Generated Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        340,
+        -200
+      ],
+      "id": "36db2ae9-e11c-433b-960f-919007f9901e",
+      "name": "Google Sheets",
+      "credentials": {}
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking \u2018Test workflow\u2019": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets2": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Limit1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets3": {
+      "main": [
+        [
+          {
+            "node": "Analyze Posts - Anthropic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyze Posts - Anthropic",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze Posts - Anthropic": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Analyze Posts - Anthropic",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c06ecd4d-6b73-4c6e-951e-a167e0cafc02",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "168fead106935d011d42ab8e6efa7083b8bcc9576da437d7be9e150f4369ea62"
+  },
+  "id": "BulRg4w777gE2OAx",
+  "tags": []
+}
