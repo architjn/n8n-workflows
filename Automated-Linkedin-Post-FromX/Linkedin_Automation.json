@@ -1,0 +1,1714 @@
+{
+  "name": "Linkedin Automation - Archit Jain",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Scrape X",
+        "height": 620,
+        "width": 1840
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -220,
+        -880
+      ],
+      "typeVersion": 1,
+      "id": "1a809241-0790-4976-9bea-7a3ce723d0ee",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 5
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -140,
+        -525
+      ],
+      "id": "16bb5932-b1f3-405a-becf-27ced4c678fe",
+      "name": "5AM Everyday"
+    },
+    {
+      "parameters": {
+        "url": "https://twitter241.p.rapidapi.com/search-v2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "{\n  \"type\": \"Latest\",\n  \"count\": 10,\n  \"query\": \"(from:testingcatalog) -filter:retweets -filter:replies lang:en\"\n}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-rapidapi-host",
+              "value": "twitter241.p.rapidapi.com"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        -525
+      ],
+      "id": "26a6cdf5-ad47-40a3-bf11-1a4318fe8d07",
+      "name": "Get AI Tweets",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "ILqJ0Ss2E6N7bzva",
+          "name": "RapidAPI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cleanerList = [];\nconst list = $input.first().json.result.timeline.instructions[0].entries;\n\nfor (const item of list) {\n  if (item.content.entryType !== \"TimelineTimelineItem\" || item.content.itemContent.itemType !== 'TimelineTweet') continue;\n\n  const content = item.content.itemContent.tweet_results.result;\n\n  const { views, legacy, rest_id:tweetId} = content ?? {};\n  const user = content?.core?.user_results?.result ?? {}\n\n  const userId = user?.rest_id\n  const userInfo = user?.legacy??{}\n  const {name: userFullName, url:userUrl, screen_name:userName} = userInfo\n  const primaryUrl = userInfo?.entities?.url?.urls?.length > 0?userInfo?.entities?.url?.urls[0]?.expanded_url:null \n\n  const media =\n    legacy?.entities?.media?.length > 0 ? legacy.entities.media[0] : {};\n\n  const video =\n  media.type === \"video\"\n    ? media.video_info?.variants\n        ?.sort((a, b) => a.bitrate - b.bitrate)\n        .slice(-1)[0]?.url ?? null\n    : null;\n  const image = media.type === \"photo\" ? media.media_url_https : null;\n\n  const fullText = legacy.full_text;\n\n  cleanerList.push({ views: views.count, video, image, fullText, tweetId, userId,userFullName,userUrl,userName, primaryUrl});\n}\n\nreturn cleanerList;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        -525
+      ],
+      "id": "8918df8b-2d1f-4064-bb77-d5673e27f13c",
+      "name": "Clean Tweets"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        520,
+        -525
+      ],
+      "id": "d7bd6803-e1f9-42e2-ab00-d1bbc30274f3",
+      "name": "Loop Tweets"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0",
+          "mode": "list",
+          "cachedResultName": "Daily AI News",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "TweetId",
+              "lookupValue": "={{ $json.tweetId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        740,
+        -600
+      ],
+      "id": "04b6064d-0ddf-4e11-967d-f2801bce2a22",
+      "name": "Find Existing Tweet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rn3BYzXFYtmdsek1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1180,
+        -500
+      ],
+      "id": "27451587-a415-453e-947e-1bc2809231c5",
+      "name": "Already Exists, Ignore"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0",
+          "mode": "list",
+          "cachedResultName": "Daily AI News",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Post": "={{ $('Loop Tweets').item.json.fullText }}",
+            "Image": "={{ $('Loop Tweets').item.json.image }}",
+            "Video": "={{ $('Loop Tweets').item.json.video }}",
+            "Views": "={{ $('Loop Tweets').item.json.views }}",
+            "TweetId": "={{ $('Loop Tweets').item.json.tweetId }}",
+            "UserId": "={{ $('Loop Tweets').item.json.userId }}",
+            "User Full Name": "={{ $('Loop Tweets').item.json.userFullName }}",
+            "Username": "={{ $('Loop Tweets').item.json.userName }}",
+            "User Url": "={{ $('Loop Tweets').item.json.userUrl }}",
+            "Status": "New",
+            "Date": "={{ $now.format('yyyy-MM-dd') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Post",
+              "displayName": "Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Image",
+              "displayName": "Image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video",
+              "displayName": "Video",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Views",
+              "displayName": "Views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "TweetId",
+              "displayName": "TweetId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "UserId",
+              "displayName": "UserId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "User Full Name",
+              "displayName": "User Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Username",
+              "displayName": "Username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "User Url",
+              "displayName": "User Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post Content",
+              "displayName": "Post Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1400,
+        -525
+      ],
+      "id": "5708f4d5-e78d-42ed-9234-a16edb5ce8b4",
+      "name": "Save New Tweet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rn3BYzXFYtmdsek1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        740,
+        -800
+      ],
+      "id": "86097c09-2d25-415b-80d6-72d130880ae4",
+      "name": "All Done, End"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -140,
+        120
+      ],
+      "id": "105091ee-bea5-445c-980b-96566af73d8c",
+      "name": "6AM Daily"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0",
+          "mode": "list",
+          "cachedResultName": "Daily AI News",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "New"
+            },
+            {
+              "lookupColumn": "Date",
+              "lookupValue": "={{ $now.format('yyyy-MM-dd') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        80,
+        120
+      ],
+      "id": "39b73976-c63f-4c22-be52-41b5a2ceee4b",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rn3BYzXFYtmdsek1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Find Existing Tweet').item.json.row_number }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "number",
+                      "operation": "empty",
+                      "singleValue": true
+                    },
+                    "id": "8fc5bde9-10e7-4e06-8a13-c3481f6d6900"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "New"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "5bf6fc6b-3f64-4c0c-a1cb-ad806eb5c5d3",
+                    "leftValue": "={{ $('Find Existing Tweet').item.json.row_number }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "number",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Existing"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        960,
+        -600
+      ],
+      "id": "f83a89ed-fd31-40de-be23-0755bc792d84",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1180,
+        -700
+      ],
+      "id": "ccd4fba6-c97b-4965-8330-ebdbe2a932fb",
+      "name": "Wait",
+      "webhookId": "ede04144-6f3e-4a9c-b64c-cd5e52fcc529"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Convert this tweet for linkedin Post - \n\n{{ $json.Post }}\n\n-----\nPost will have attachment -\nVideo: {{ !!$json.Video }}\nImage: {{ !!$json.Image }}\n\n-----\nMeta information -\nrow_number - {{ $json.row_number }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are a Linkedin Social Media Marketing expert. You are great at creating posts daily about AI.\n\nYou will be given a twitter post for which you need to convert it to Linkedin Post.\n\nYou need to make sure to change the workings to remove plagiarism.\n\nYou MUST remove the URL from the post.\n\nMust output with below key\nPost: [your generated post content here]"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        520,
+        120
+      ],
+      "id": "ea19b297-b627-4586-af5b-608e92035fca",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-nano",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        548,
+        340
+      ],
+      "id": "a8659cc4-e4b6-4b11-8f42-bfaf4d15c7ae",
+      "name": "4.1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "CGW0UD2Uwkzjnlyv",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "maxItems": 10
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        300,
+        120
+      ],
+      "id": "6a1d98b0-97a2-4469-94fe-019d9547b515",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"post\": \"post content here\",\n    \"row_number\": 2\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        668,
+        340
+      ],
+      "id": "0b5318b2-f18a-4d14-98a3-63e8ce5f2a08",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        896,
+        120
+      ],
+      "id": "52315263-e2da-4238-b819-4065eadf9b1d",
+      "name": "Loop Posts"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1116,
+        120
+      ],
+      "id": "669b07e5-5d5f-4776-89fe-2e3a5e6e5893",
+      "name": "Wait1",
+      "webhookId": "d8eeb37d-8894-456c-b41d-ef7e5c9a59cd"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0",
+          "mode": "list",
+          "cachedResultName": "Daily AI News",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $json.output.row_number }}",
+            "Post Content": "={{ $json.output.post }}",
+            "Status": "Needs Approval"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Post",
+              "displayName": "Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image",
+              "displayName": "Image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video",
+              "displayName": "Video",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Views",
+              "displayName": "Views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TweetId",
+              "displayName": "TweetId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "UserId",
+              "displayName": "UserId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User Full Name",
+              "displayName": "User Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Username",
+              "displayName": "Username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User Url",
+              "displayName": "User Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Post Content",
+              "displayName": "Post Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1336,
+        195
+      ],
+      "id": "0c54fe5b-8b8b-4808-ae93-04afdb848937",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rn3BYzXFYtmdsek1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "6771012698",
+        "text": "=New Linkedin Posts Available. Please review them <a href=\"https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit?usp=sharing\">here</a>",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1336,
+        -80
+      ],
+      "id": "13d9386c-2ee2-4bb1-b465-4f09bdbc8111",
+      "name": "Telegram",
+      "webhookId": "388366cb-77ac-4e87-899f-94377370df94",
+      "credentials": {
+        "telegramApi": {
+          "id": "RR9V9K2XQXNMw7dj",
+          "name": "AI Assistant Chat"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "Post Content"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1116,
+        -80
+      ],
+      "id": "586e326a-431d-418f-8bce-3e625716ab60",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "content": "## Generate AI Posts",
+        "height": 620,
+        "width": 1840,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -220,
+        -120
+      ],
+      "typeVersion": 1,
+      "id": "be441d03-228e-467c-9984-77babf5f7dcf",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0",
+          "mode": "list",
+          "cachedResultName": "Daily AI News",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit#gid=0"
+        },
+        "event": "rowUpdate",
+        "options": {
+          "columnsToWatch": [
+            "Status"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        760
+      ],
+      "id": "1695c93e-086e-46b0-a9c2-29ff4aa0621c",
+      "name": "Updated News",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "5g5ZT00T8lduRiKA",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "57dc7d96-ba31-413a-9f17-b18e3317f820",
+              "leftValue": "={{ $json.Status }}",
+              "rightValue": "Approved",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "a9334194-00f4-4939-be10-9419f442142e",
+              "leftValue": "={{ $json.Video }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        100,
+        760
+      ],
+      "id": "8e40dd04-eb9c-41dd-bbe7-4e1bc8b794bf",
+      "name": "Filter Approved"
+    },
+    {
+      "parameters": {
+        "maxItems": 20
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        320,
+        760
+      ],
+      "id": "9f1fb6ca-c6e9-4328-8039-5aafeb9c8b95",
+      "name": "Max 20"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst now = new Date();\nconst year = now.getFullYear();\nconst month = now.getMonth();\nconst day = now.getDate();\n\n// Set 3pm today\nconst threePM = new Date(year, month, day, 15, 0, 0, 0);\n\nfor (const item of items) {\n  let randomTime;\n  if (now >= threePM) {\n    randomTime = threePM;\n  } else {\n    const secondsLeft = Math.floor((threePM - now) / 1000);\n    const randSec = Math.floor(Math.random() * secondsLeft);\n    randomTime = new Date(now.getTime() + randSec * 1000);\n  }\n  item.json.randomTime = randomTime.toISOString();\n}\n\n// Sort descending by randomTime\nitems.sort((a, b) => a.json.randomTime.localeCompare(b.json.randomTime));\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        760
+      ],
+      "id": "8bbe2d6b-def0-4afa-91f9-b4c2e5dab0e5",
+      "name": "Get Post Timings"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        760,
+        760
+      ],
+      "id": "bde62053-2b0b-461f-b916-5f4a3f99b95f",
+      "name": "Loop Approved Posts"
+    },
+    {
+      "parameters": {
+        "resume": "specificTime",
+        "dateTime": "={{ $json.randomTime }}"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        980,
+        780
+      ],
+      "id": "9fb8cbec-5177-4955-8528-d2a3a7c30a25",
+      "name": "Wait for Posting",
+      "webhookId": "e088063a-b121-4a9a-9eaa-3c6d63abd169"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Wait for Posting').item.json.Image }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        1020
+      ],
+      "id": "95892a34-8a23-481d-92eb-5b740499e01c",
+      "name": "Download Image"
+    },
+    {
+      "parameters": {
+        "person": "25RLdCHRNk",
+        "text": "={{ $('Wait for Posting').item.json['Post Content'] }}",
+        "shareMediaCategory": "IMAGE",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.linkedIn",
+      "typeVersion": 1,
+      "position": [
+        980,
+        1020
+      ],
+      "id": "dd58e9b3-b459-4d9c-8fda-7ea267ac4445",
+      "name": "Post LinkedIn",
+      "credentials": {
+        "linkedInOAuth2Api": {
+          "id": "eevlT6ryQ7RItWii",
+          "name": "LinkedIn account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0",
+          "mode": "list",
+          "cachedResultName": "Daily AI News",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "TweetId": "={{ $json.TweetId }}",
+            "Status": "Posting"
+          },
+          "matchingColumns": [
+            "TweetId"
+          ],
+          "schema": [
+            {
+              "id": "Post",
+              "displayName": "Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image",
+              "displayName": "Image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video",
+              "displayName": "Video",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Views",
+              "displayName": "Views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TweetId",
+              "displayName": "TweetId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "UserId",
+              "displayName": "UserId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User Full Name",
+              "displayName": "User Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Username",
+              "displayName": "Username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User Url",
+              "displayName": "User Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Post Content",
+              "displayName": "Post Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1180,
+        780
+      ],
+      "id": "63b8bfb0-4033-42a2-af94-ebfe229d9095",
+      "name": "Set Posting",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rn3BYzXFYtmdsek1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0",
+          "mode": "list",
+          "cachedResultName": "Daily AI News",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1KXQva4s_stC6D9ClnCn_j_PP5rZqNDkRRIxI6VyfQp0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "TweetId": "={{ $('Set Posting').item.json.TweetId }}",
+            "Status": "Posted"
+          },
+          "matchingColumns": [
+            "TweetId"
+          ],
+          "schema": [
+            {
+              "id": "Post",
+              "displayName": "Post",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Image",
+              "displayName": "Image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Video",
+              "displayName": "Video",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Views",
+              "displayName": "Views",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Date",
+              "displayName": "Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TweetId",
+              "displayName": "TweetId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "UserId",
+              "displayName": "UserId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User Full Name",
+              "displayName": "User Full Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Username",
+              "displayName": "Username",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "User Url",
+              "displayName": "User Url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Post Content",
+              "displayName": "Post Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1180,
+        1020
+      ],
+      "id": "e3914bad-12f2-4818-9c42-c0efc73c4aa8",
+      "name": "Set Posted",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rn3BYzXFYtmdsek1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Post approved content",
+        "height": 700,
+        "width": 1840,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -220,
+        600
+      ],
+      "typeVersion": 1,
+      "id": "a8214800-8601-4ed4-adca-e633c23e55c3",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "chatId": "6771012698",
+        "text": "Published all posts on Linkedin",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1100,
+        620
+      ],
+      "id": "2027cc2a-7654-4c25-a92c-e232e65e51e2",
+      "name": "Update User",
+      "webhookId": "cf321257-96a3-4964-9660-9937ca1a082a",
+      "credentials": {
+        "telegramApi": {
+          "id": "RR9V9K2XQXNMw7dj",
+          "name": "AI Assistant Chat"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "5AM Everyday": {
+      "main": [
+        [
+          {
+            "node": "Get AI Tweets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get AI Tweets": {
+      "main": [
+        [
+          {
+            "node": "Clean Tweets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Tweets": {
+      "main": [
+        [
+          {
+            "node": "Loop Tweets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Tweets": {
+      "main": [
+        [
+          {
+            "node": "All Done, End",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Find Existing Tweet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Existing Tweet": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Exists, Ignore": {
+      "main": [
+        [
+          {
+            "node": "Loop Tweets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save New Tweet": {
+      "main": [
+        [
+          {
+            "node": "Loop Tweets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6AM Daily": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already Exists, Ignore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Save New Tweet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4.1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Loop Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Posts": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Loop Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Updated News": {
+      "main": [
+        [
+          {
+            "node": "Filter Approved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Approved": {
+      "main": [
+        [
+          {
+            "node": "Max 20",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Max 20": {
+      "main": [
+        [
+          {
+            "node": "Get Post Timings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Post Timings": {
+      "main": [
+        [
+          {
+            "node": "Loop Approved Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Approved Posts": {
+      "main": [
+        [
+          {
+            "node": "Update User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait for Posting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Posting": {
+      "main": [
+        [
+          {
+            "node": "Set Posting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Image": {
+      "main": [
+        [
+          {
+            "node": "Post LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Set Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Posting": {
+      "main": [
+        [
+          {
+            "node": "Download Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Posted": {
+      "main": [
+        [
+          {
+            "node": "Loop Approved Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ad0a0ee6-05a6-4a42-ac8b-e2bb533ec2e2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "933df83c84196d70ce3ffd0bf5d3e1aca31b7366f2f84e1f3482640096e4a3a9"
+  },
+  "id": "osBCgU5nbpfrepN6",
+  "tags": []
+}
