@@ -1,0 +1,680 @@
+{
+  "name": "Login System",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        800
+      ],
+      "id": "47ba2270-9e4d-4bf1-a3c5-c68e2e810065",
+      "name": "Get Message",
+      "webhookId": "36b5c727-a6f8-4fee-9055-c9ad06b93a38",
+      "credentials": {
+        "telegramApi": {
+          "id": "nl1aur0dBto9loNM",
+          "name": "Trader AI Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "14dImXClDkvAd6bPhyOv5s1DUOg3Q_aTI1l0gO1V0klg",
+          "mode": "list",
+          "cachedResultName": "Login Sample Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14dImXClDkvAd6bPhyOv5s1DUOg3Q_aTI1l0gO1V0klg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-fthqXBqtGbt0FC4x8ti5cRnvi0apEcJcFIzgQWhHuk/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Telegram Chat Id",
+              "lookupValue": "={{ $('Merge').item.json['Telegram Chat Id'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        560,
+        600
+      ],
+      "id": "2ab85c19-5f38-49de-b6a6-316c621705f6",
+      "name": "Find User",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rn3BYzXFYtmdsek1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.row_number }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "number",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "80c45455-653c-43f4-b3ea-5d19f3dfcfcf"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Old"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "98ee6aae-5b1c-4016-9b4b-c288d37381cd",
+                    "leftValue": "={{ $json.row_number }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "number",
+                      "operation": "notExists",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "New"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        760,
+        600
+      ],
+      "id": "3dcd8b09-cb74-439b-80aa-87c7994e65b1",
+      "name": "Is New User"
+    },
+    {
+      "parameters": {
+        "jsCode": "function uuidv4() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {\n    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\n\nreturn [{ json: { uuid: uuidv4() } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        780
+      ],
+      "id": "9e20fe5b-c5e0-4b94-8262-01dd022ff0e7",
+      "name": "Get UserId"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "14dImXClDkvAd6bPhyOv5s1DUOg3Q_aTI1l0gO1V0klg",
+          "mode": "list",
+          "cachedResultName": "Login Sample Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14dImXClDkvAd6bPhyOv5s1DUOg3Q_aTI1l0gO1V0klg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-fthqXBqtGbt0FC4x8ti5cRnvi0apEcJcFIzgQWhHuk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "UserId": "={{ $json.uuid }}",
+            "Name": "={{ $('Get Message').item.json.message.chat.first_name }}",
+            "Telegram Chat Id": "={{ $('Merge').item.json['Telegram Chat Id'] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "UserId",
+              "displayName": "UserId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Telegram Chat Id",
+              "displayName": "Telegram Chat Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1120,
+        780
+      ],
+      "id": "17f198c5-7a18-4661-b299-3cac28804b99",
+      "name": "Create User",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rn3BYzXFYtmdsek1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        1500,
+        900
+      ],
+      "id": "ae42ce20-dd11-4ae3-8036-3d424cac004b",
+      "name": "UserId"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "UserId",
+        "key": "=fin-{{ $json['Telegram Chat Id'] }}-userId",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        60,
+        1040
+      ],
+      "id": "d70a4151-887d-475b-baeb-9588be242929",
+      "name": "Find Cached User",
+      "credentials": {
+        "redis": {
+          "id": "GvDlhohDVV1ytedG",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.UserId }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    },
+                    "id": "155d0a34-e8b7-4b4f-8718-38a2d5f0622b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Not Set"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "7a2a6895-7019-47f7-a36a-18bf191c18eb",
+                    "leftValue": "={{ $json.UserId }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Is Set"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        280,
+        1040
+      ],
+      "id": "c930bee8-2e8c-4eab-9a59-56ee1cb9349e",
+      "name": "Is Cached"
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "=fin-{{ $('Merge').item.json['Telegram Chat Id'] }}-userId",
+        "value": "={{ $json.UserId }}"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        580
+      ],
+      "id": "4896c86b-42f8-4b18-899b-f4353ef397ac",
+      "name": "Cache User",
+      "credentials": {
+        "redis": {
+          "id": "GvDlhohDVV1ytedG",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# Find or Create User",
+        "height": 880,
+        "width": 2080,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -320,
+        420
+      ],
+      "typeVersion": 1,
+      "id": "07465c66-6b72-4870-b02d-156e32f551ab",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "message"
+            },
+            {
+              "name": "userId"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -160,
+        600
+      ],
+      "id": "715e7922-e3fc-40cb-8a00-207c2ac08861",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        -160,
+        1040
+      ],
+      "id": "5de97977-1128-42f7-9b96-075dd9662e1e",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "14dImXClDkvAd6bPhyOv5s1DUOg3Q_aTI1l0gO1V0klg",
+          "mode": "list",
+          "cachedResultName": "Login Sample Sheet",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14dImXClDkvAd6bPhyOv5s1DUOg3Q_aTI1l0gO1V0klg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Users",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/14dImXClDkvAd6bPhyOv5s1DUOg3Q_aTI1l0gO1V0klg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "UserId",
+              "lookupValue": "={{ $json.userId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        60,
+        600
+      ],
+      "id": "5e68c21d-51f2-4a61-803b-5aff05007d3c",
+      "name": "Get User",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "Rn3BYzXFYtmdsek1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62f2f7d1-f852-403e-9e05-a686721b6557",
+              "name": "Telegram Chat Id",
+              "value": "={{ $json.message.chat.id }}",
+              "type": "string"
+            },
+            {
+              "id": "d3c87a8a-ed93-4509-87ad-baffd513de3f",
+              "name": "Message",
+              "value": "={{ $json.message.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        60,
+        800
+      ],
+      "id": "da473a91-2c5b-4d6d-b850-4c35a1426625",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "62f2f7d1-f852-403e-9e05-a686721b6557",
+              "name": "Telegram Chat Id",
+              "value": "={{ $json['Telegram Chat Id'] }}",
+              "type": "string"
+            },
+            {
+              "id": "d3c87a8a-ed93-4509-87ad-baffd513de3f",
+              "name": "Message",
+              "value": "={{ $('When Executed by Another Workflow').item.json.message }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        600
+      ],
+      "id": "642b0052-8987-4c09-b926-5382e37ddc02",
+      "name": "Edit Fields2"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get Message": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find User": {
+      "main": [
+        [
+          {
+            "node": "Is New User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is New User": {
+      "main": [
+        [
+          {
+            "node": "Cache User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get UserId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get UserId": {
+      "main": [
+        [
+          {
+            "node": "Create User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create User": {
+      "main": [
+        [
+          {
+            "node": "UserId",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "UserId": {
+      "main": [
+        []
+      ]
+    },
+    "Find Cached User": {
+      "main": [
+        [
+          {
+            "node": "Is Cached",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Cached": {
+      "main": [
+        [
+          {
+            "node": "Find User",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "UserId",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Cache User": {
+      "main": [
+        [
+          {
+            "node": "UserId",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Find Cached User",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get User": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c91fe9b2-0dd1-4aeb-a3d5-37e962b09495",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "933df83c84196d70ce3ffd0bf5d3e1aca31b7366f2f84e1f3482640096e4a3a9"
+  },
+  "id": "wQIlBiGuRAehquVv",
+  "tags": []
+}
