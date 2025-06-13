@@ -1,0 +1,728 @@
+{
+  "name": "Gmail Optimiser",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        480
+      ],
+      "id": "b8974db0-fe4b-4a4c-ab27-21e7b78b2672",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qaWniySSWX6Qgmeo",
+          "name": "architjn93@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "=Identify the category of this email -\n\nHTML:  {{ $json.html }}\n\nTEXT: {{ $json.text }}\n\nSUBJECT: {{ $json.subject }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Marketing/Promotional",
+              "description": "The email provided is strictly marketing or promotional"
+            },
+            {
+              "category": "Stock Updates",
+              "description": "The email provided is strictly just basic stock update"
+            },
+            {
+              "category": "Newsletter",
+              "description": "The email is strictly some kind of newsletter"
+            },
+            {
+              "category": "Stock Important",
+              "description": "The email is strictly about affecting your stock portfolio and is not general update."
+            },
+            {
+              "category": "Sale/Earning",
+              "description": "The email is strictly about a sale of my product with a value above zero."
+            },
+            {
+              "category": "Security Alert",
+              "description": "The email is strictly about security alert of my online account"
+            },
+            {
+              "category": "Payment Receipt",
+              "description": "The email is strictly about a spend I did anywhere"
+            }
+          ]
+        },
+        "options": {
+          "fallback": "discard",
+          "systemPromptTemplate": "Please classify the email content provided by the user into one of the following categories: {categories}, and use the provided formatting instructions below. Don't explain, and only output the json."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        480
+      ],
+      "id": "7c2a0dbd-8acc-4064-9c7e-86217abeb854",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-nano",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        308,
+        700
+      ],
+      "id": "4c86fb80-851d-4dc9-b3d3-6e59e3e70667",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "CGW0UD2Uwkzjnlyv",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1040,
+        480
+      ],
+      "id": "0e2f15ad-224d-43c5-b485-e259b83f8ca7",
+      "name": "Gmail",
+      "webhookId": "6b76f922-ec53-42ac-a91a-e77be933c5e2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qaWniySSWX6Qgmeo",
+          "name": "architjn93@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fc318d7-4722-4d48-9413-e523e6c331cf",
+              "name": "classified",
+              "value": "Marketing",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        596,
+        -120
+      ],
+      "id": "7d09dec0-cae5-468a-b5bf-baaef7a80b8e",
+      "name": "Marketing"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fc318d7-4722-4d48-9413-e523e6c331cf",
+              "name": "classified",
+              "value": "Stock Updates",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        596,
+        80
+      ],
+      "id": "767ef774-f85d-4419-a181-5023288d2026",
+      "name": "Stock Updates"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fc318d7-4722-4d48-9413-e523e6c331cf",
+              "name": "classified",
+              "value": "Newsletter",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        596,
+        280
+      ],
+      "id": "04fd8e9a-721c-4334-961c-54daaf5c81a2",
+      "name": "Newsletter"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fc318d7-4722-4d48-9413-e523e6c331cf",
+              "name": "classified",
+              "value": "Stock Important",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        596,
+        480
+      ],
+      "id": "94c8397e-0676-461d-b36d-de93831bbc92",
+      "name": "Stock Important"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fc318d7-4722-4d48-9413-e523e6c331cf",
+              "name": "classified",
+              "value": "Earning",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        596,
+        680
+      ],
+      "id": "2b57ae4f-3614-4516-8b62-0364946d22e3",
+      "name": "Earning"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fc318d7-4722-4d48-9413-e523e6c331cf",
+              "name": "classified",
+              "value": "Security Alert",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        596,
+        880
+      ],
+      "id": "c8dc2260-5ef1-40e5-999e-fde8abb2fa53",
+      "name": "Security Alert"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2fc318d7-4722-4d48-9413-e523e6c331cf",
+              "name": "classified",
+              "value": "Spent",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        596,
+        1080
+      ],
+      "id": "e86e54cc-ecfb-4015-bfdd-1c659bf25002",
+      "name": "Spent"
+    },
+    {
+      "parameters": {
+        "numberInputs": 7
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        820,
+        400
+      ],
+      "id": "95eaa1eb-1d53-4f61-a286-372b9270cefa",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst filteredList = items.filter(r => r.json.name?.toLowerCase() == $('Merge').first().json.classified?.toLowerCase())\n\nreturn filteredList.length > 0 ? filteredList[0]: {id: \"NA\"};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1260,
+        480
+      ],
+      "id": "fb2e5db0-4ea6-4f7e-add5-2eba7dfb69b5",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.id }}",
+                    "rightValue": "NA",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1f3fd335-6ce1-4856-adf6-5d0c44dac708"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Unknown Category"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4421706d-52ad-48a4-9c20-c0bd0967253e",
+                    "leftValue": "={{ $json.id }}",
+                    "rightValue": "NA",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEquals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Existing Category"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1480,
+        480
+      ],
+      "id": "02364c27-46c1-40d4-9435-83f26feaa0f0",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "operation": "create",
+        "name": "={{ $('Merge').first().json.classified }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1860,
+        120
+      ],
+      "id": "755a9cfb-c3a3-4667-bd8b-33c5192d1170",
+      "name": "Create Label",
+      "webhookId": "fcd87af3-51c8-4f1d-84ff-c9be143aaf6e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qaWniySSWX6Qgmeo",
+          "name": "architjn93@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "thread",
+        "operation": "addLabels",
+        "threadId": "={{ $('Gmail Trigger').first().json.threadId }}",
+        "labelIds": "={{ [$json.id] }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2260,
+        500
+      ],
+      "id": "3bc41b43-ea15-4725-8a1c-680e60456ebb",
+      "name": "Apply Label",
+      "webhookId": "57fd8396-cf56-40b7-a57a-13a60ab5751a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "qaWniySSWX6Qgmeo",
+          "name": "architjn93@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## New Email Trigger",
+        "height": 1480,
+        "width": 220
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -60,
+        -220
+      ],
+      "typeVersion": 1,
+      "id": "fea09302-280e-491c-b158-a659d799414a",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Classify Email",
+        "height": 1480,
+        "width": 760,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        200,
+        -220
+      ],
+      "typeVersion": 1,
+      "id": "e3629a00-e2ee-48a6-8644-7f5c60fd92f6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Find Existing Label",
+        "height": 1480,
+        "width": 640,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        980,
+        -220
+      ],
+      "typeVersion": 1,
+      "id": "c6e59d86-b666-4432-a1c2-30c1485cbe3d",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Create New Label",
+        "height": 640,
+        "width": 820,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1640,
+        -220
+      ],
+      "typeVersion": 1,
+      "id": "1d613e34-2f23-48d5-ae0b-0f9eef979f7d",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Apply Label",
+        "height": 820,
+        "width": 820,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1640,
+        440
+      ],
+      "typeVersion": 1,
+      "id": "1c129b5e-4cf5-4547-9692-250c2cde4a42",
+      "name": "Sticky Note4"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "Marketing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stock Updates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Newsletter",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stock Important",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Earning",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Security Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Spent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marketing": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stock Updates": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Newsletter": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Stock Important": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Earning": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "Security Alert": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "Spent": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 6
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Create Label",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Apply Label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Label": {
+      "main": [
+        [
+          {
+            "node": "Apply Label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "57b3b7a5-d267-417c-9dab-73fea1c2fdfd",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "933df83c84196d70ce3ffd0bf5d3e1aca31b7366f2f84e1f3482640096e4a3a9"
+  },
+  "id": "nDFWJnq4gYgNKDm8",
+  "tags": []
+}
