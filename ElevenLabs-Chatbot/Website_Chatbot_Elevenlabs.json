@@ -1,0 +1,223 @@
+{
+  "name": "Website Chatbot Elevenlabs",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.message }}",
+        "options": {
+          "systemMessage": "=```xml\n<overview>\nYou are a website knowledge base assistant, you complete any user request by checking the website content if it matches the user request.\n</overview>\n\n<constants>\nwebsite base url - https://www.architjn.com\nwebsite sitemap url - https://www.architjn.com/sitemap.xml\n</constants>\n\n<step-by-step-instructions>\n1. First step must be to get the sitemap of the website.\n2. MUST shorlist three best URL match according to the request.\n3. MUST check all those three shortlisted URLs for the content of the page and extract the relevant infromation.\n4. MUST revisit the relevant information extracted to find the best suited response for the user's original request.\n5. You MUST not include all the information fetched, only include whichever is actually matches the user's request.\n  - You should score each information with a score out of hundred\n  - You must only add information which is above 75 in relevance to the user's request.\n6. MUST provide the user a clear and clean answer. Should be crisp.\n7. MUST not include any process of finding the information.\n8. MUST add citations with each answer.\n9. MUST answer as if you're part of the website team. You need to talk as first person using \"we\" wherever necessary. Like \"we have this\", \"we think this is possible like this\", etc.\n10. Answers must be short and crisp, until asked to be long.\n</step-by-step-instructions>\n\n<output-structure>\n1. MUST be in markdown format.\n2. MUST use citation as [1] or [2], depending on how many are there.\n3. MUST use clickable links for citations in format which markdown supports like [[1]](SITE_URL)\n</output-structure>\n\n<examples>\n  <example>\n    <input>What's the best n8n usecase?</input>\n    <output>One of the best usecase we have is to automate your linkedin posts using n8n by extracting twitter content daily with human in loop [[1]](https://www.architjn.com/blog/competitor-facebook-ads-analysis-n8n-workflow).\n  </example>\n</examples>\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        312,
+        0
+      ],
+      "id": "4f2dd72b-4d90-4485-a09f-1083126d39cf",
+      "name": "Support Agent"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-nano",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        180,
+        220
+      ],
+      "id": "910b057e-9ff8-4e05-9fc5-1913802b173d",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "CGW0UD2Uwkzjnlyv",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Get's the content of a webpage from the specified URL.",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `any url with the full URL including https\nit only takes absolute url.`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        540,
+        220
+      ],
+      "id": "6554c89d-b347-4230-8a1a-3315f5348b90",
+      "name": "Website Content"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this tool to get the website's sitemap. This takes sitemap link as input for URL and returns the sitemap of the website in XML",
+        "url": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('URL', `complete URL with https and full path to sitemap`, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        220
+      ],
+      "id": "3bb5c20e-7bf1-4d75-83f1-8cb5f664c1e9",
+      "name": "Website Sitemap"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.uuid }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        360,
+        220
+      ],
+      "id": "4f9c9df5-6d75-475d-94ac-6d611410b5a8",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "26f20c01-d8a0-408c-9d24-df3a8076e784",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0819452e-3360-4a4b-8f09-ed1419c48ff7",
+      "name": "Webhook",
+      "webhookId": "26f20c01-d8a0-408c-9d24-df3a8076e784"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.3,
+      "position": [
+        680,
+        0
+      ],
+      "id": "c9aefa5b-b70e-4444-93cf-61e5087eb125",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.architjn.com",
+            "x-real-ip": "34.59.11.47",
+            "x-forwarded-for": "34.59.11.47",
+            "x-forwarded-proto": "https",
+            "content-length": "83",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate",
+            "user-agent": "Python/3.12 aiohttp/3.11.16",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "message": "How to set up Any10?",
+            "uuid": "b46919cb-b949-4951-9499-59290c4e8253"
+          },
+          "webhookUrl": "https://n8n.architjn.com/webhook/26f20c01-d8a0-408c-9d24-df3a8076e784",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website Content": {
+      "ai_tool": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website Sitemap": {
+      "ai_tool": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Support Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Support Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f540aa02-c010-4f47-9c19-3bbac2a5f50a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "933df83c84196d70ce3ffd0bf5d3e1aca31b7366f2f84e1f3482640096e4a3a9"
+  },
+  "id": "7TqokjUZkh435SCL",
+  "tags": []
+}
