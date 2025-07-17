@@ -1,0 +1,231 @@
+{
+  "name": "Youtube Agent (architjn.com)",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "query"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2b4e3f32-ab4d-4c89-987a-efaf5567c31e",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        80,
+        220
+      ],
+      "id": "dffc3659-8d10-4a8a-a754-186701a93a80",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "CGW0UD2Uwkzjnlyv",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to get the information about the youtube channel assigned.",
+        "workflowId": {
+          "__rl": true,
+          "value": "TZ3tGTvdrzlDeafI",
+          "mode": "list",
+          "cachedResultName": "Youtube Knowledge (architjn)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "type": "channel info"
+          },
+          "matchingColumns": [
+            "video query"
+          ],
+          "schema": [
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "video query",
+              "displayName": "video query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        340,
+        220
+      ],
+      "id": "6dd79b0a-276f-484d-a396-241bd245af85",
+      "name": "Youtube Channel Info"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to get the information about the videos in the youtube channel. This tool takes video query as input which is search query performed on youtube on a specific channel.",
+        "workflowId": {
+          "__rl": true,
+          "value": "TZ3tGTvdrzlDeafI",
+          "mode": "list",
+          "cachedResultName": "Youtube Knowledge (architjn)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "video query": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('video_query', `search query to filter out videos on specified youtube channel. query can be small and direct to the point. This is only needed when type is \"search channel\" otherwise it can be blank`, 'string') }}",
+            "type": "search channel"
+          },
+          "matchingColumns": [
+            "video query"
+          ],
+          "schema": [
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "video query",
+              "displayName": "video query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        220
+      ],
+      "id": "180c0622-f306-47cd-ad80-7a3632dd5a0f",
+      "name": "Youtube Channel Videos"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.query }}",
+        "options": {
+          "systemMessage": "=You are a youtube channel assistant for the channel assigned.\n\nYou have access to various tools, you can use them to get the desired information\n\n## Instructions\n- You must use tools to get the information required\n\n## Tools\n### Youtube Channel Info\n- This tool tells you which channel is assigned to you.\n- You can use \"Youtube Channel Info\" tool to get the channel info.\n\n### Youtube Channel Videos\nYou can use \"Youtube Channel Videos\" tool to get the channel videos."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "954c515c-703e-4b8f-9fea-8d6e3a870a7a",
+      "name": "Youtube Agent"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "query": "Do you have any youtube channel?"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Youtube Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Youtube Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Youtube Channel Info": {
+      "ai_tool": [
+        [
+          {
+            "node": "Youtube Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Youtube Channel Videos": {
+      "ai_tool": [
+        [
+          {
+            "node": "Youtube Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "83bac678-86f9-4b88-b172-cb73dfc7e087",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "933df83c84196d70ce3ffd0bf5d3e1aca31b7366f2f84e1f3482640096e4a3a9"
+  },
+  "id": "AVXSMnXdoqa2Hf91",
+  "tags": []
+}

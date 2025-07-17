@@ -1,0 +1,329 @@
+{
+  "name": "Youtube Knowledge (architjn)",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "video",
+        "filters": {
+          "channelId": "={{ $json['channel id'] }}",
+          "q": "={{ $json['video query'] }}"
+        },
+        "options": {
+          "order": "relevance"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        700,
+        -120
+      ],
+      "id": "96b14fa7-3e06-4330-9d6c-ceafd9b26157",
+      "name": "Find Video",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "5t2G133mYC1jE3ti",
+          "name": "YouTube Architjn"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "type"
+            },
+            {
+              "name": "video query"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6afa60dc-ad82-460e-ab28-1da4d6e2e836",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0c4681ac-2393-4229-8b13-c882a5d99ef3",
+              "name": "Title",
+              "value": "={{ $json.snippet.title }}",
+              "type": "string"
+            },
+            {
+              "id": "6485c911-d244-43fb-a89f-29d6bb578622",
+              "name": "description",
+              "value": "={{ $json.snippet.description }}",
+              "type": "string"
+            },
+            {
+              "id": "2920a3db-d1f6-4c9a-9450-59f5bb390a78",
+              "name": "publish-date",
+              "value": "={{ $json.snippet.publishTime }}",
+              "type": "string"
+            },
+            {
+              "id": "0a80f67a-a352-4341-a505-3a9d1f245c99",
+              "name": "video-link",
+              "value": "=https://youtu.be/{{ $json.id.videoId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        940,
+        -140
+      ],
+      "id": "d927f959-0adb-495a-8c44-bc24e9230a40",
+      "name": "Video Details"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.type }}",
+                    "rightValue": "search channel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "8f560a45-a454-4a41-9617-85c8bb3ebc5e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Search"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "340ae224-a226-448b-946f-7c615a20cb55",
+                    "leftValue": "={{ $('When Executed by Another Workflow').item.json.type }}",
+                    "rightValue": "channel info",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Info"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "2d87b2c8-0bbe-44b7-870c-38dfceef25fa",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "channelId": "={{ $json['channel id'] }}"
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        900,
+        140
+      ],
+      "id": "d76b4853-101f-42f6-97fa-5ce11ec3a6a2",
+      "name": "Get a channel",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "5t2G133mYC1jE3ti",
+          "name": "YouTube Architjn"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "601f5cc5-b802-4178-84b6-ffa610e0cbe7",
+              "name": "channel id",
+              "value": "UCQUiHn9RLG3ofJxIt4imnBw",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "2d76b660-ac1f-4ff4-9ffe-440188018f3e",
+      "name": "Channel Info"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4a5694a1-a3a0-47ed-8444-f64c1f6768ad",
+              "name": "Channel Name",
+              "value": "={{ $json.brandingSettings.channel.title }}",
+              "type": "string"
+            },
+            {
+              "id": "cf7836f8-2d96-4163-a018-08afe8641a4c",
+              "name": "Channel Custom URL",
+              "value": "={{ $json.snippet.customUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "2921eb2b-7bc3-4232-b677-9bdfefa370a4",
+              "name": "total video count",
+              "value": "={{ $json.statistics.videoCount }}",
+              "type": "string"
+            },
+            {
+              "id": "0b65188c-28d5-4c81-a114-b469eb21cf18",
+              "name": "subscribers count",
+              "value": "={{ $json.statistics.subscriberCount }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        140
+      ],
+      "id": "daa4c61c-e17a-493e-9939-605f0ec360ba",
+      "name": "Channel Details"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "type": "search channel",
+          "video query": "self hosting"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Channel Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Video": {
+      "main": [
+        [
+          {
+            "node": "Video Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Find Video",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get a channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Channel Info": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a channel": {
+      "main": [
+        [
+          {
+            "node": "Channel Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "3c73be68-3a1c-4c2e-a7a4-aa336e7d5acb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "933df83c84196d70ce3ffd0bf5d3e1aca31b7366f2f84e1f3482640096e4a3a9"
+  },
+  "id": "TZ3tGTvdrzlDeafI",
+  "tags": []
+}

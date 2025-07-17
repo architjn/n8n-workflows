@@ -1,0 +1,266 @@
+{
+  "name": "Architjn.com Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "bf662133-bbf5-42b6-8e9d-169c7a1b9d3a",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7f904bcb-b959-47a8-b209-c3876e53bf62",
+      "name": "Webhook",
+      "webhookId": "bf662133-bbf5-42b6-8e9d-169c7a1b9d3a"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.3,
+      "position": [
+        800,
+        0
+      ],
+      "id": "237a2fa3-d7e2-4ca2-acb1-38702a2fb44a",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Webhook').item.json.body.query }}",
+        "options": {
+          "systemMessage": "=You are a impersonating {{ $json['user name'] }}'s assistant.\n\nYou have access to tools."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "5b9b5b41-0258-4150-b4a4-ff1b9e6fec52",
+      "name": "Architjn.com Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').item.json.body.sessionId }}",
+        "databaseName": "architjn_website"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryMongoDbChat",
+      "typeVersion": 1,
+      "position": [
+        440,
+        260
+      ],
+      "id": "2ece3c97-c074-463f-8d70-fce649720491",
+      "name": "MongoDB Chat Memory",
+      "credentials": {
+        "mongoDb": {
+          "id": "n6weSJULTJxTCHoO",
+          "name": "MongoDB account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-4.1-nano",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        280,
+        260
+      ],
+      "id": "3f576850-830e-42a3-aef1-1d3117786daa",
+      "name": "oAI",
+      "credentials": {
+        "openRouterApi": {
+          "id": "CGW0UD2Uwkzjnlyv",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "description": "Call this tool to get the youtube videos you have on the channel.",
+        "workflowId": {
+          "__rl": true,
+          "value": "AVXSMnXdoqa2Hf91",
+          "mode": "list",
+          "cachedResultName": "Youtube Agent (architjn.com)"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "query": "={{ $('Webhook').item.json.body.query }}"
+          },
+          "matchingColumns": [
+            "query"
+          ],
+          "schema": [
+            {
+              "id": "query",
+              "displayName": "query",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        680,
+        260
+      ],
+      "id": "47a2213a-f17a-4fb4-a0a1-6f509764c6f2",
+      "name": "Youtube Channel"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4239faf1-eaa9-4f41-8b4c-303f597ecadf",
+              "name": "user name",
+              "value": "Archit Jain",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ],
+      "id": "80dced2f-ccbf-424d-a70a-69b75fe91e9b",
+      "name": "User Info"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "connection": "upgrade",
+            "host": "n8n.architjn.com",
+            "x-real-ip": "49.36.189.84",
+            "x-forwarded-for": "49.36.189.84",
+            "x-forwarded-proto": "https",
+            "content-length": "83",
+            "content-type": "application/json",
+            "user-agent": "PostmanRuntime/7.44.1",
+            "accept": "*/*",
+            "cache-control": "no-cache",
+            "postman-token": "edab0698-99a3-4a39-84e3-a4aa0162e67a",
+            "accept-encoding": "gzip, deflate, br"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "query": "Do you have any youtube channel?",
+            "sessionId": "X0Ti4V&!4I$"
+          },
+          "webhookUrl": "https://n8n.architjn.com/webhook/bf662133-bbf5-42b6-8e9d-169c7a1b9d3a",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "User Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Architjn.com Agent": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MongoDB Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Architjn.com Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "oAI": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Architjn.com Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Youtube Channel": {
+      "ai_tool": [
+        [
+          {
+            "node": "Architjn.com Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "User Info": {
+      "main": [
+        [
+          {
+            "node": "Architjn.com Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "495ceaa5-2034-42dc-b562-63fa84c2496f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "933df83c84196d70ce3ffd0bf5d3e1aca31b7366f2f84e1f3482640096e4a3a9"
+  },
+  "id": "s1ZvsCwnoBGj6kit",
+  "tags": []
+}
